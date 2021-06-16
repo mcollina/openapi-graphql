@@ -46,11 +46,6 @@
     "guru-test": "DEBUG=preprocessing,translation node test/evaluation/eval_apis_guru.js",
     "test": "npm run build && jest --runInBand --detectOpenHandles"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
   "jest": {
     "moduleFileExtensions": [
       "ts",
