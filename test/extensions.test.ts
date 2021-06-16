@@ -28,8 +28,7 @@ describe('GraphQL Extensions', () => {
     beforeAll(async () => {
       oas = require('./fixtures/extensions.json')
       const { schema } = await openAPIToGraphQL.createGraphQLSchema(oas, {
-        fillEmptyResponses: true,
-        createSubscriptionsFromCallbacks: true
+        fillEmptyResponses: true
       })
       createdSchema = schema
     })
@@ -44,14 +43,6 @@ describe('GraphQL Extensions', () => {
       const mutations = Object.keys(createdSchema.getMutationType().getFields())
       expect(mutations).not.toContain('updatePetWithForm')
       expect(mutations).toContain('updatePetForm')
-    })
-
-    test('should rename Subscription with x-graphql-field-name', () => {
-      const subscriptions = Object.keys(
-        createdSchema.getSubscriptionType().getFields()
-      )
-      expect(subscriptions).not.toContain('petEventListener')
-      expect(subscriptions).toContain('petEvent')
     })
 
     test('should rename Type with x-graphql-type-name', () => {
@@ -144,23 +135,6 @@ describe('GraphQL Extensions', () => {
           `Cannot create mutation field with name "createUser".\nYou ` +
             `provided "createUser" in x-graphql-field-name, but it ` +
             `conflicts with another field named "createUser".`
-        )
-      )
-    })
-
-    test('should throw when x-graphql-field-name causes naming conflicts on subscriptions', async () => {
-      const oas = require('./fixtures/extensions_error5.json')
-      await expect(
-        openAPIToGraphQL.createGraphQLSchema(oas, {
-          createSubscriptionsFromCallbacks: true,
-          fillEmptyResponses: true
-        })
-      ).rejects.toThrowError(
-        new Error(
-          `Cannot create subscription field with name ` +
-            `"userEventListener".\nYou provided "userEventListener" ` +
-            `in x-graphql-field-name, but it conflicts with another ` +
-            `field named "userEventListener".`
         )
       )
     })

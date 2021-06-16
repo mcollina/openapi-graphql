@@ -5,7 +5,7 @@
 
 // Type imports:
 import * as NodeRequest from 'request'
-import { GraphQLOperationType, SubscriptionContext } from './graphql'
+import { GraphQLOperationType } from './graphql'
 import { GraphQLFieldResolver, GraphQLResolveInfo } from 'graphql'
 
 /**
@@ -23,10 +23,8 @@ export type Report = {
   numOps: number
   numOpsQuery: number
   numOpsMutation: number
-  numOpsSubscription: number
   numQueriesCreated: number
   numMutationsCreated: number
-  numSubscriptionsCreated: number
 }
 
 export type ConnectOptions = {
@@ -188,14 +186,6 @@ export type InternalOptions<TSource, TContext, TArgs> = {
    */
   singularNames: boolean
 
-  /**
-   * Allow to generate subscription fields from callback objects in the OAS.
-   *
-   * The keys (runtime expressions) of the callback object will be interpolated
-   * as the topic of publish/subscription connection.
-   */
-  createSubscriptionsFromCallbacks: boolean
-
   // Resolver options
 
   /**
@@ -222,13 +212,6 @@ export type InternalOptions<TSource, TContext, TArgs> = {
   requestOptions?: Partial<RequestOptions<TSource, TContext, TArgs>>
 
   /**
-   * Allows to override or add options to the PubSub connect object used to make
-   * publish/subscribe to the API backend.
-   * e.g. Setup the web proxy to use.
-   */
-  connectOptions?: ConnectOptions
-
-  /**
    * Specifies the URL on which all paths will be based on.
    * Overrides the server object in the OAS.
    */
@@ -252,29 +235,6 @@ export type InternalOptions<TSource, TContext, TArgs> = {
   customResolvers?: OasTitlePathMethodObject<
     GraphQLFieldResolver<TSource, TContext, TArgs>
   >
-
-  /**
-   * Allows to define custom resolvers and subscribe functions for fields on the
-   * Subscription root operation type.
-   *
-   * In other words, instead of resolving on an operation (REST call) defined in
-   * the OAS, the field will resolve on the custom resolver. Note that this will
-   * also affect the behavior of links.
-   *
-   * The field is identifed first by the title of the OAS, then the path of the
-   * operation, and lastly the method of the operation.
-   *
-   * Use cases include the resolution of complex relationships between types,
-   * implementing performance improvements like caching, or dealing with
-   * non-standard authentication requirements.
-   *
-   * Note: Subscription fields will only be generated if the
-   * createSubscriptionsFromCallbacks option is enabled.
-   */
-  customSubscriptionResolvers?: OasTitlePathMethodObject<{
-    subscribe: GraphQLFieldResolver<TSource, SubscriptionContext, TArgs>
-    resolve: GraphQLFieldResolver<TSource, TContext, TArgs>
-  }>
 
   // Authentication options
 

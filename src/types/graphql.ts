@@ -19,8 +19,7 @@ import {
 
 export enum GraphQLOperationType {
   Query,
-  Mutation,
-  Subscription
+  Mutation
 }
 
 export type GraphQLType =
@@ -40,22 +39,9 @@ export type Args = {
   [key: string]: Arg
 }
 
-export type SubscriptionContext = {
-  pubsub: any
-  [key: string]: any
-}
-
-export type SubscriptionIterator = (
-  root: object,
-  args: object,
-  context: SubscriptionContext,
-  info?: object
-) => AsyncIterable<string | string[]>
-
 export type Field<TSource, TContext, TArgs> = {
   type: GraphQLType
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>
-  subscribe?: GraphQLFieldResolver<TSource, SubscriptionContext, TArgs>
   args?: Args
   description: string
 }

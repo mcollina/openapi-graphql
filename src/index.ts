@@ -40,11 +40,7 @@ import {
 } from './types/options'
 import { Oas3 } from './types/oas3'
 import { Oas2 } from './types/oas2'
-import {
-  Args,
-  GraphQLOperationType,
-  SubscriptionContext
-} from './types/graphql'
+import { Args, GraphQLOperationType } from './types/graphql'
 import { Operation } from './types/operation'
 import { PreprocessingData } from './types/preprocessing_data'
 import {
@@ -57,11 +53,7 @@ import {
 
 // Imports:
 import { getGraphQLType, getArgs } from './schema_builder'
-import {
-  getResolver,
-  getSubscribe,
-  getPublishResolver
-} from './resolver_builder'
+import { getResolver } from './resolver_builder'
 import * as GraphQLTools from './graphql_tools'
 import { preprocessOas } from './preprocessor'
 import * as Oas3Tools from './oas_3_tools'
@@ -83,10 +75,8 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
     numOps: 0,
     numOpsQuery: 0,
     numOpsMutation: 0,
-    numOpsSubscription: 0,
     numQueriesCreated: 0,
-    numMutationsCreated: 0,
-    numSubscriptionsCreated: 0
+    numMutationsCreated: 0
   },
 
   // Setting default options
@@ -102,14 +92,12 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
   simpleNames: false,
   simpleEnumValues: false,
   singularNames: false,
-  createSubscriptionsFromCallbacks: false,
 
   // Resolver options
   headers: {},
   qs: {},
   requestOptions: {},
   customResolvers: {},
-  customSubscriptionResolvers: {},
 
   // Authentication options
   viewer: true,
@@ -198,16 +186,13 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     simpleNames,
     simpleEnumValues,
     singularNames,
-    createSubscriptionsFromCallbacks,
 
     // Resolver options
     headers,
     qs,
     requestOptions,
-    connectOptions,
     baseUrl,
     customResolvers,
-    customSubscriptionResolvers,
 
     // Authentication options
     viewer,
@@ -237,16 +222,13 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     simpleNames,
     simpleEnumValues,
     singularNames,
-    createSubscriptionsFromCallbacks,
 
     // Resolver options
     headers,
     qs,
     requestOptions,
-    connectOptions,
     baseUrl,
     customResolvers,
-    customSubscriptionResolvers,
 
     // Authentication options
     viewer,
@@ -274,25 +256,17 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
 
   preliminaryChecks(options, data)
 
-  // Query, Mutation, and Subscription fields
+  // Query, Mutation fields
   let queryFields: { [fieldName: string]: GraphQLFieldConfig<any, any> } = {}
   let mutationFields: { [fieldName: string]: GraphQLFieldConfig<any, any> } = {}
-  let subscriptionFields: {
-    [fieldName: string]: GraphQLFieldConfig<any, any>
-  } = {}
 
-  // Authenticated Query, Mutation, and Subscription fields
+  // Authenticated Query and Mutation fields
   let authQueryFields: {
     [fieldName: string]: {
       [securityRequirement: string]: GraphQLFieldConfig<any, any>
     }
   } = {}
   let authMutationFields: {
-    [fieldName: string]: {
-      [securityRequirement: string]: GraphQLFieldConfig<any, any>
-    }
-  } = {}
-  let authSubscriptionFields: {
     [fieldName: string]: {
       [securityRequirement: string]: GraphQLFieldConfig<any, any>
     }
@@ -323,26 +297,9 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     }
   })
 
-  // Add Subscription fields
-  Object.entries(data.callbackOperations).forEach(
-    ([operationId, operation]) => {
-      translationLog(`Process operation '${operationId}'...`)
-
-      addSubscriptionFields({
-        authSubscriptionFields,
-        subscriptionFields,
-        operationId,
-        operation,
-        options,
-        data
-      })
-    }
-  )
-
   // Sorting fields
   queryFields = sortObject(queryFields)
   mutationFields = sortObject(mutationFields)
-  subscriptionFields = sortObject(subscriptionFields)
   authQueryFields = sortObject(authQueryFields)
   Object.keys(authQueryFields).forEach((key) => {
     authQueryFields[key] = sortObject(authQueryFields[key])
@@ -351,12 +308,8 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
   Object.keys(authMutationFields).forEach((key) => {
     authMutationFields[key] = sortObject(authMutationFields[key])
   })
-  authSubscriptionFields = sortObject(authSubscriptionFields)
-  Object.keys(authSubscriptionFields).forEach((key) => {
-    authSubscriptionFields[key] = sortObject(authSubscriptionFields[key])
-  })
 
-  // Count created Query, Mutation, and Subscription fields
+  // Count created Query and Mutation fields
   report.numQueriesCreated =
     Object.keys(queryFields).length +
     Object.keys(authQueryFields).reduce((sum, key) => {
@@ -369,14 +322,8 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
       return sum + Object.keys(authMutationFields[key]).length
     }, 0)
 
-  report.numSubscriptionsCreated =
-    Object.keys(subscriptionFields).length +
-    Object.keys(authSubscriptionFields).reduce((sum, key) => {
-      return sum + Object.keys(authSubscriptionFields[key]).length
-    }, 0)
-
   /**
-   * Organize authenticated Query, Mutation, and Subscriptions fields into
+   * Organize authenticated Query and Mutation fields into
    * viewer objects.
    */
   if (Object.keys(authQueryFields).length > 0) {
@@ -397,17 +344,6 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     )
   }
 
-  if (Object.keys(authSubscriptionFields).length > 0) {
-    Object.assign(
-      subscriptionFields,
-      createAndLoadViewer(
-        authSubscriptionFields,
-        GraphQLOperationType.Subscription,
-        data
-      )
-    )
-  }
-
   // Build up the schema
   const schemaConfig: GraphQLSchemaConfig = {
     query:
@@ -422,13 +358,6 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
         ? new GraphQLObjectType({
             name: 'Mutation',
             fields: mutationFields
-          })
-        : null,
-    subscription:
-      Object.keys(subscriptionFields).length > 0
-        ? new GraphQLObjectType({
-            name: 'Subscription',
-            fields: subscriptionFields
           })
         : null
   }
@@ -472,21 +401,10 @@ function addQueryFields<TSource, TContext, TArgs>({
   options: InternalOptions<TSource, TContext, TArgs>
   data: PreprocessingData<TSource, TContext, TArgs>
 }) {
-  const {
-    operationIdFieldNames,
-    singularNames,
-    baseUrl,
-    requestOptions,
-    connectOptions
-  } = options
+  const { operationIdFieldNames, singularNames, baseUrl, requestOptions } =
+    options
 
-  const field = getFieldForOperation(
-    operation,
-    baseUrl,
-    data,
-    requestOptions,
-    connectOptions
-  )
+  const field = getFieldForOperation(operation, baseUrl, data, requestOptions)
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
@@ -648,15 +566,9 @@ function addMutationFields<TSource, TContext, TArgs>({
   options: InternalOptions<TSource, TContext, TArgs>
   data: PreprocessingData<TSource, TContext, TArgs>
 }) {
-  const { singularNames, baseUrl, requestOptions, connectOptions } = options
+  const { singularNames, baseUrl, requestOptions } = options
 
-  const field = getFieldForOperation(
-    operation,
-    baseUrl,
-    data,
-    requestOptions,
-    connectOptions
-  )
+  const field = getFieldForOperation(operation, baseUrl, data, requestOptions)
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
@@ -774,126 +686,6 @@ function addMutationFields<TSource, TContext, TArgs>({
   }
 }
 
-function addSubscriptionFields<TSource, TContext, TArgs>({
-  authSubscriptionFields,
-  subscriptionFields,
-  operationId,
-  operation,
-  options,
-  data
-}: {
-  authSubscriptionFields: {
-    [fieldName: string]: {
-      [securityRequirement: string]: GraphQLFieldConfig<any, any>
-    }
-  }
-  subscriptionFields: { [fieldName: string]: GraphQLFieldConfig<any, any> }
-  operationId: string
-  operation: Operation
-  options: InternalOptions<TSource, TContext, TArgs>
-  data: PreprocessingData<TSource, TContext, TArgs>
-}) {
-  const { baseUrl, requestOptions, connectOptions } = options
-
-  const field = getFieldForOperation(
-    operation,
-    baseUrl,
-    data,
-    requestOptions,
-    connectOptions
-  )
-
-  const saneOperationId = Oas3Tools.sanitize(
-    operationId,
-    Oas3Tools.CaseStyle.camelCase
-  )
-
-  const extensionFieldName =
-    operation.operation[Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName]
-
-  if (!Oas3Tools.isSanitized(extensionFieldName)) {
-    throw new Error(
-      `Cannot create subscription field with name ` +
-        `"${extensionFieldName}".\nYou provided "${extensionFieldName}" in ` +
-        `${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it is not ` +
-        `GraphQL-safe."`
-    )
-  }
-
-  const fieldName = extensionFieldName || saneOperationId
-
-  // Generate viewer
-  if (operation.inViewer) {
-    for (let securityRequirement of operation.securityRequirements) {
-      if (typeof authSubscriptionFields[securityRequirement] !== 'object') {
-        authSubscriptionFields[securityRequirement] = {}
-      }
-
-      if (
-        extensionFieldName &&
-        extensionFieldName in authSubscriptionFields[securityRequirement]
-      ) {
-        throw new Error(
-          `Cannot create subscription field with name ` +
-            `"${extensionFieldName}".\nYou provided "${extensionFieldName}" ` +
-            `in ${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-            `conflicts with another field named "${extensionFieldName}".`
-        )
-      }
-
-      // Final fieldName verification
-      if (fieldName in authSubscriptionFields[securityRequirement]) {
-        handleWarning({
-          mitigationType: MitigationTypes.DUPLICATE_FIELD_NAME,
-          message:
-            `Multiple operations have the same name ` +
-            `'${fieldName}' and security requirement ` +
-            `'${securityRequirement}'. GraphQL field names must be ` +
-            `unique so only one can be added to the authentication ` +
-            `viewer. Operation '${operation.operationString}' will be ignored.`,
-          data,
-          log: translationLog
-        })
-
-        return
-      }
-
-      // Add field into viewer
-      authSubscriptionFields[securityRequirement][fieldName] = field
-    }
-
-    // No viewer
-  } else {
-    if (extensionFieldName && extensionFieldName in subscriptionFields) {
-      throw new Error(
-        `Cannot create subscription field with name ` +
-          `"${extensionFieldName}".\nYou provided "${extensionFieldName}" ` +
-          `in ${Oas3Tools.OAS_GRAPHQL_EXTENSIONS.FieldName}, but it ` +
-          `conflicts with another field named "${extensionFieldName}".`
-      )
-    }
-
-    // Final fieldName verification
-    if (fieldName in subscriptionFields) {
-      handleWarning({
-        mitigationType: MitigationTypes.DUPLICATE_FIELD_NAME,
-        message:
-          `Multiple operations have the same name ` +
-          `'${fieldName}'. GraphQL field names must be ` +
-          `unique so only one can be added to the Mutation object. ` +
-          `Operation '${operation.operationString}' will be ignored.`,
-        data,
-        log: translationLog
-      })
-
-      return
-    }
-
-    // Add field into Subscription
-    subscriptionFields[fieldName] = field
-  }
-}
-
 /**
  * Creates the field object for the given operation.
  */
@@ -901,9 +693,8 @@ function getFieldForOperation<TSource, TContext, TArgs>(
   operation: Operation,
   baseUrl: string,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  requestOptions: Partial<RequestOptions<TSource, TContext, TArgs>>,
-  connectOptions: ConnectOptions
-): GraphQLFieldConfig<TSource, TContext | SubscriptionContext, TArgs> {
+  requestOptions: Partial<RequestOptions<TSource, TContext, TArgs>>
+): GraphQLFieldConfig<TSource, TContext, TArgs> {
   // Create GraphQL Type for response:
   const type = getGraphQLType({
     def: operation.responseDefinition,
@@ -928,55 +719,24 @@ function getFieldForOperation<TSource, TContext, TArgs>(
     data
   })
 
-  // Get resolver and subscribe function for Subscription fields
-  if (operation.operationType === GraphQLOperationType.Subscription) {
-    const responseSchemaName = operation.responseDefinition
-      ? operation.responseDefinition.graphQLTypeName
-      : null
+  const resolve = getResolver({
+    operation,
+    payloadName: payloadSchemaName,
+    data,
+    baseUrl,
+    requestOptions
+  })
 
-    const resolve = getPublishResolver({
-      operation,
-      responseName: responseSchemaName,
-      data
-    })
-
-    const subscribe = getSubscribe({
-      operation,
-      payloadName: payloadSchemaName,
-      data,
-      baseUrl,
-      connectOptions
-    })
-
-    return {
-      type,
-      resolve,
-      subscribe,
-      args,
-      description: operation.description
-    }
-
-    // Get resolver for Query and Mutation fields
-  } else {
-    const resolve = getResolver({
-      operation,
-      payloadName: payloadSchemaName,
-      data,
-      baseUrl,
-      requestOptions
-    })
-
-    return {
-      type,
-      resolve,
-      args,
-      description: operation.description
-    }
+  return {
+    type,
+    resolve,
+    args,
+    description: operation.description
   }
 }
 
 /**
- * Ensure that the customResolvers/customSubscriptionResolvers object is a
+ * Ensure that the customResolvers object is a
  * triply nested object using the name of the OAS, the path, and the method
  * as keys.
  */
@@ -1063,9 +823,6 @@ function preliminaryChecks<TSource, TContext, TArgs>(
 
   // Check customResolvers
   checkCustomResolversStructure(options.customResolvers, data)
-
-  // Check customSubscriptionResolvers
-  checkCustomResolversStructure(options.customSubscriptionResolvers, data)
 }
 
 export { CaseStyle, sanitize } from './oas_3_tools'
