@@ -8,6 +8,7 @@
 import { graphql, parse, validate, execute, subscribe } from 'graphql'
 import { afterAll, beforeAll, expect, test } from '@jest/globals'
 
+import WebSocket from 'ws'
 import { createServer } from 'http'
 import {
   SubscriptionServer,
@@ -134,7 +135,9 @@ test('Receive data from the subscription after creating a new instance', () => {
 
   return new Promise<void>((resolve, reject) => {
     const client = new SubscriptionClient(
-      `ws://localhost:${TEST_PORT}/subscriptions`
+      `ws://localhost:${TEST_PORT}/subscriptions`,
+      {},
+      WebSocket
     )
 
     client.onError((e) => reject(e))
