@@ -1,0 +1,114 @@
+{
+  "name": "openapi-graphql",
+  "version": "0.0.1",
+  "description": "Generates a GraphQL schema for a given OpenAPI Specification (OAS)",
+  "contributors": [
+    "Matteo Collina",
+    "Alan Cha",
+    "Erik Wittern"
+  ],
+  "engines": {
+    "node": ">=12"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcollina/openapi-graphql"
+  },
+  "homepage": "https://github.com/mcollina/openapi-graphql",
+  "keywords": [
+    "oas",
+    "openapi specification",
+    "graphql",
+    "translation",
+    "wrap",
+    "create",
+    "rest",
+    "restful",
+    "api",
+    "apiharmony"
+  ],
+  "license": "MIT",
+  "standard": {
+    "ignore": [
+      "*.js"
+    ]
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "api": "nodemon test/example_api_server.js",
+    "api_sub": "nodemon test/example_api5_server.js",
+    "dev": "tsc -w",
+    "start_dev": "DEBUG=preprocessing,translation,http nodemon test/example_gql_server.js",
+    "start_dev_ws": "DEBUG=preprocessing,translation,http,pubsub nodemon test/example_gql_server_ws.js",
+    "build": "tsc",
+    "guru-load": "node test/evaluation/load_apis_guru.js",
+    "guru-test": "DEBUG=preprocessing,translation node test/evaluation/eval_apis_guru.js",
+    "test": "npm run build && jest --runInBand --detectOpenHandles"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "ts-jest"
+    },
+    "testRegex": "/test/.*\\.test\\.(ts|tsx|js)$"
+  },
+  "dependencies": {
+    "debug": "^4.2.0",
+    "deep-equal": "^2.0.1",
+    "form-urlencoded": "^6.0.4",
+    "graphql-subscriptions": "^1.1.0",
+    "graphql-type-json": "^0.3.2",
+    "json-ptr": "^1.3.1",
+    "jsonpath-plus": "^4.0.0",
+    "oas-validator": "^5.0.2",
+    "pluralize": "^8.0.0",
+    "request": "^2.88.0",
+    "swagger2openapi": "^7.0.2"
+  },
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0"
+  },
+  "devDependencies": {
+    "@types/graphql": "^14.0.3",
+    "@types/jest": "^26.0.14",
+    "@types/node": "^14.11.2",
+    "@types/request": "^2.48.1",
+    "aedes": "^0.42.6",
+    "aedes-persistence": "^8.1.1",
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.16.4",
+    "express-graphql": "^0.11.0",
+    "glob": "^7.1.3",
+    "graphql": "^15.3.0",
+    "graphql-mqtt-subscriptions": "^1.2.0",
+    "graphql-multiplex-subscriptions": "^2.0.0",
+    "husky": "^4.3.0",
+    "isomorphic-git": "^1.7.8",
+    "jest": "^26.4.2",
+    "js-yaml": "^3.14.0",
+    "mqemitter": "^4.4.0",
+    "mqtt": "^4.2.1",
+    "nodemon": "^2.0.2",
+    "prettier": "^2.1.2",
+    "pretty-quick": "^3.0.2",
+    "rimraf": "^3.0.1",
+    "simple-statistics": "^7.3.0",
+    "standard": "^14.3.1",
+    "subscriptions-transport-ws": "^0.9.16",
+    "ts-jest": "^26.4.1",
+    "tslint": "^6.0.0",
+    "tslint-config-standard": "^9.0.0",
+    "typescript": "^4.0.3"
+  }
+}
