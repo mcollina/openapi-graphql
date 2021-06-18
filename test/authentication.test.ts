@@ -10,6 +10,7 @@ import { afterAll, beforeAll, expect, test } from '@jest/globals'
 
 import * as openAPIToGraphQL from '../lib/index'
 import { startServer, stopServer } from './example_api_server'
+import { httpRequest } from './httprequest'
 
 const oas = require('./fixtures/example_oas.json')
 const PORT = 3003
@@ -23,9 +24,11 @@ let createdSchema
  */
 beforeAll(() => {
   return Promise.all([
-    openAPIToGraphQL.createGraphQLSchema(oas).then(({ schema }) => {
-      createdSchema = schema
-    }),
+    openAPIToGraphQL
+      .createGraphQLSchema(oas, { httpRequest })
+      .then(({ schema }) => {
+        createdSchema = schema
+      }),
     startServer(PORT)
   ])
 })
@@ -128,7 +131,8 @@ test('Get project using API key passed as option - viewer is disabled', async ()
     viewer: false,
     headers: {
       access_token: 'abcdef'
-    }
+    },
+    httpRequest
   })
   const query = `{
     projectWithId (projectId: 1) {
@@ -154,7 +158,8 @@ test('Get project using API key passed in the requestOptions - viewer is disable
         access_token: 'abcdef'
       },
       url: undefined // Mandatory for requestOptions type
-    }
+    },
+    httpRequest
   })
   const query = `{
     projectWithId (projectId: 1) {
@@ -275,7 +280,8 @@ test('Get project using API key 3 passed as option - viewer is disabled', async 
     viewer: false,
     headers: {
       cookie: 'access_token=abcdef'
-    }
+    },
+    httpRequest
   })
   const query = `{
     projectWithId (projectId: 1) {
@@ -301,7 +307,8 @@ test('Get project using API key 3 passed in the requestOptions - viewer is disab
         cookie: 'access_token=abcdef'
       },
       url: undefined // Mandatory for requestOptions type
-    }
+    },
+    httpRequest
   })
   const query = `{
     projectWithId (projectId: 1) {
@@ -459,7 +466,8 @@ test('Extract token from context', () => {
   return openAPIToGraphQL
     .createGraphQLSchema(oas, {
       tokenJSONpath: '$.user.token',
-      viewer: true
+      viewer: true,
+      httpRequest
     })
     .then(({ schema }) => {
       return graphql(schema, query, null, { user: { token: 'abcdef' } }).then(

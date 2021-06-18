@@ -200,7 +200,6 @@ export function preprocessOas<TSource, TContext, TArgs>(
 ): PreprocessingData<TSource, TContext, TArgs> {
   const data: PreprocessingData<TSource, TContext, TArgs> = {
     operations: {},
-    callbackOperations: {},
     usedTypeNames: [
       'Query', // Used by OpenAPI-to-GraphQL for root-level element
       'Mutation', // Used by OpenAPI-to-GraphQL for root-level element

@@ -7,6 +7,7 @@
 
 import { graphql } from 'graphql'
 import { afterAll, beforeAll, expect, test } from '@jest/globals'
+import { httpRequest } from './httprequest'
 
 import * as openAPIToGraphQL from '../lib/index'
 
@@ -21,7 +22,7 @@ let createdSchema
  */
 beforeAll(() => {
   return openAPIToGraphQL
-    .createGraphQLSchema(oas)
+    .createGraphQLSchema(oas, { httpRequest })
     .then(({ schema, report }) => {
       createdSchema = schema
     })

@@ -11,6 +11,7 @@ import { afterAll, beforeAll, expect, test } from '@jest/globals'
 import * as openAPIToGraphQL from '../lib/index'
 import { Options } from '../lib/types/options'
 import { startServer, stopServer } from './example_api6_server'
+import { httpRequest } from './httprequest'
 
 const oas = require('./fixtures/example_oas6.json')
 const PORT = 3008
@@ -24,9 +25,11 @@ let createdSchema
  */
 beforeAll(() => {
   return Promise.all([
-    openAPIToGraphQL.createGraphQLSchema(oas).then(({ schema, report }) => {
-      createdSchema = schema
-    }),
+    openAPIToGraphQL
+      .createGraphQLSchema(oas, { httpRequest })
+      .then(({ schema, report }) => {
+        createdSchema = schema
+      }),
     startServer(PORT)
   ])
 })
@@ -70,7 +73,8 @@ test('Option requestOptions should work with links', () => {
       headers: {
         specialheader: 'requestOptions'
       }
-    }
+    },
+    httpRequest
   }
 
   const query2 = `{

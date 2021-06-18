@@ -758,7 +758,8 @@ function createFields<TSource, TContext, TArgs>({
             argsFromLink: argsFromLink as { [key: string]: string },
             data,
             baseUrl: data.options.baseUrl,
-            requestOptions: data.options.requestOptions
+            requestOptions: data.options.requestOptions,
+            httpRequest: data.options.httpRequest
           })
 
           // Get arguments for link
@@ -1080,18 +1081,6 @@ function skipArg<TSource, TContext, TArgs>(
           parameter.name in data.options.headers
         ) {
           return true
-        } else if (typeof data.options.headers === 'function') {
-          const headers = data.options.headers(
-            operation.method,
-            operation.path,
-            operation.oas.info.title
-          )
-
-          if (typeof headers === 'object') {
-            return true
-          }
-
-          // Check requestOptions option
         } else if (typeof data.options.requestOptions === 'object') {
           if (
             typeof data.options.requestOptions.headers === 'object' &&

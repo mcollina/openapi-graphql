@@ -11,6 +11,8 @@ import { afterAll, beforeAll, expect, test } from '@jest/globals'
 import * as openAPIToGraphQL from '../lib/index'
 import { Options } from '../lib/types/options'
 
+import { httpRequest } from './httprequest'
+
 const api = require('./example_api_server')
 const api2 = require('./example_api3_server')
 
@@ -35,7 +37,7 @@ let createdSchema
 beforeAll(() => {
   return Promise.all([
     openAPIToGraphQL
-      .createGraphQLSchema([oas, oas3])
+      .createGraphQLSchema([oas, oas3], { httpRequest })
       .then(({ schema, report }) => {
         createdSchema = schema
       }),
@@ -301,6 +303,7 @@ test('Two APIs with AnyAuth viewer and interrelated links', () => {
 
 test('Option customResolver with two APIs', () => {
   const options: Options<any, any, any> = {
+    httpRequest,
     customResolvers: {
       'Example API': {
         '/users/{username}': {
@@ -353,6 +356,7 @@ test('Option customResolver with two APIs', () => {
 
 test('Option customResolver with two APIs and interrelated links', () => {
   const options: Options<any, any, any> = {
+    httpRequest,
     customResolvers: {
       'Example API': {
         '/users/{username}': {

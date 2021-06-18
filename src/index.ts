@@ -35,9 +35,9 @@ import {
   Options,
   InternalOptions,
   Report,
-  ConnectOptions,
-  RequestOptions
+  ConnectOptions
 } from './types/options'
+import { HTTPRequest, RequestOptions } from './types/request'
 import { Oas3 } from './types/oas3'
 import { Oas2 } from './types/oas2'
 import { Args, GraphQLOperationType } from './types/graphql'
@@ -96,7 +96,6 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
   // Resolver options
   headers: {},
   qs: {},
-  requestOptions: {},
   customResolvers: {},
 
   // Authentication options
@@ -109,7 +108,10 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
 
   // Logging options
   provideErrorExtensions: true,
-  equivalentToMessages: true
+  equivalentToMessages: true,
+
+  httpRequest: undefined,
+  requestOptions: {}
 }
 
 /**
@@ -190,7 +192,6 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     // Resolver options
     headers,
     qs,
-    requestOptions,
     baseUrl,
     customResolvers,
 
@@ -205,7 +206,10 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
 
     // Logging options
     provideErrorExtensions,
-    equivalentToMessages
+    equivalentToMessages,
+
+    httpRequest,
+    requestOptions
   }: InternalOptions<TSource, TContext, TArgs>
 ): Result<TSource, TContext, TArgs> {
   const options = {
@@ -226,7 +230,6 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     // Resolver options
     headers,
     qs,
-    requestOptions,
     baseUrl,
     customResolvers,
 
@@ -241,7 +244,10 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
 
     // Logging options
     provideErrorExtensions,
-    equivalentToMessages
+    equivalentToMessages,
+
+    httpRequest,
+    requestOptions
   }
   translationLog(`Options: ${JSON.stringify(options)}`)
 
@@ -283,7 +289,9 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
         operationId,
         operation,
         options,
-        data
+        data,
+        requestOptions,
+        httpRequest
       })
     } else if (operation.operationType === GraphQLOperationType.Mutation) {
       addMutationFields({
@@ -292,7 +300,9 @@ function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
         operationId,
         operation,
         options,
-        data
+        data,
+        requestOptions,
+        httpRequest
       })
     }
   })
@@ -388,7 +398,9 @@ function addQueryFields<TSource, TContext, TArgs>({
   operationId,
   operation,
   options,
-  data
+  data,
+  requestOptions,
+  httpRequest
 }: {
   authQueryFields: {
     [fieldName: string]: {
@@ -400,11 +412,18 @@ function addQueryFields<TSource, TContext, TArgs>({
   operation: Operation
   options: InternalOptions<TSource, TContext, TArgs>
   data: PreprocessingData<TSource, TContext, TArgs>
+  requestOptions: RequestOptions
+  httpRequest: HTTPRequest
 }) {
-  const { operationIdFieldNames, singularNames, baseUrl, requestOptions } =
-    options
+  const { operationIdFieldNames, singularNames, baseUrl } = options
 
-  const field = getFieldForOperation(operation, baseUrl, data, requestOptions)
+  const field = getFieldForOperation(
+    operation,
+    baseUrl,
+    data,
+    requestOptions,
+    httpRequest
+  )
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
@@ -553,7 +572,9 @@ function addMutationFields<TSource, TContext, TArgs>({
   operationId,
   operation,
   options,
-  data
+  data,
+  requestOptions,
+  httpRequest
 }: {
   authMutationFields: {
     [fieldName: string]: {
@@ -565,10 +586,18 @@ function addMutationFields<TSource, TContext, TArgs>({
   operation: Operation
   options: InternalOptions<TSource, TContext, TArgs>
   data: PreprocessingData<TSource, TContext, TArgs>
+  requestOptions: RequestOptions
+  httpRequest: HTTPRequest
 }) {
-  const { singularNames, baseUrl, requestOptions } = options
+  const { singularNames, baseUrl } = options
 
-  const field = getFieldForOperation(operation, baseUrl, data, requestOptions)
+  const field = getFieldForOperation(
+    operation,
+    baseUrl,
+    data,
+    requestOptions,
+    httpRequest
+  )
 
   const saneOperationId = Oas3Tools.sanitize(
     operationId,
@@ -693,7 +722,8 @@ function getFieldForOperation<TSource, TContext, TArgs>(
   operation: Operation,
   baseUrl: string,
   data: PreprocessingData<TSource, TContext, TArgs>,
-  requestOptions: Partial<RequestOptions<TSource, TContext, TArgs>>
+  requestOptions: RequestOptions,
+  httpRequest: HTTPRequest
 ): GraphQLFieldConfig<TSource, TContext, TArgs> {
   // Create GraphQL Type for response:
   const type = getGraphQLType({
@@ -724,7 +754,8 @@ function getFieldForOperation<TSource, TContext, TArgs>(
     payloadName: payloadSchemaName,
     data,
     baseUrl,
-    requestOptions
+    requestOptions,
+    httpRequest
   })
 
   return {

@@ -12,8 +12,7 @@ import { SchemaObject, ParameterObject } from './types/oas3'
 import { ConnectOptions } from './types/options'
 import { TargetGraphQLType, Operation } from './types/operation'
 import { PreprocessingData } from './types/preprocessing_data'
-import NodeRequest from 'request'
-import { RequestOptions } from './types/options'
+import { HTTPRequest, RequestOptions } from './types/request'
 
 // Imports:
 import * as Oas3Tools from './oas_3_tools'
@@ -42,7 +41,7 @@ type AuthReqAndProtcolName = {
 type AuthOptions = {
   authHeaders: { [key: string]: string }
   authQs: { [key: string]: string }
-  authCookie: NodeRequest.Cookie
+  authCookie: { [key: string]: string }
 }
 
 type GetResolverParams<TSource, TContext, TArgs> = {
@@ -52,7 +51,8 @@ type GetResolverParams<TSource, TContext, TArgs> = {
   responseName?: string
   data: PreprocessingData<TSource, TContext, TArgs>
   baseUrl?: string
-  requestOptions?: Partial<RequestOptions<TSource, TContext, TArgs>>
+  requestOptions?: Partial<RequestOptions>
+  httpRequest: HTTPRequest
 }
 
 type GetSubscribeParams<TSource, TContext, TArgs> = {
@@ -73,7 +73,7 @@ type ResolveData<TSource, TContext, TArgs> = {
   usedParams: any
 
   usedPayload: any
-  usedRequestOptions: RequestOptions<TSource, TContext, TArgs>
+  usedRequestOptions: RequestOptions
   usedStatusCode: string
   responseHeaders: IncomingHttpHeaders
 }
@@ -107,7 +107,8 @@ export function getResolver<TSource, TContext, TArgs>({
   payloadName,
   data,
   baseUrl,
-  requestOptions
+  requestOptions,
+  httpRequest
 }: GetResolverParams<TSource, TContext, TArgs>): GraphQLFieldResolver<
   TSource & OpenAPIToGraphQLSource<TSource, TContext, TArgs>,
   TContext,
@@ -285,7 +286,7 @@ export function getResolver<TSource, TContext, TArgs>({
         ? operation.responseContentType
         : 'application/json'
 
-    let options: NodeRequest.OptionsWithUrl
+    let options: RequestOptions
     if (requestOptions) {
       options = {
         ...requestOptions,
@@ -297,21 +298,7 @@ export function getResolver<TSource, TContext, TArgs>({
       options.qs = {} // Handle requestOptions.qs later if applicable
 
       if (requestOptions.headers) {
-        // requestOptions.headers may be either an object or a function
-        if (typeof requestOptions.headers === 'object') {
-          Object.assign(options.headers, headers, requestOptions.headers)
-        } else if (typeof requestOptions.headers === 'function') {
-          const headers = requestOptions.headers(method, path, title, {
-            source,
-            args,
-            context,
-            info
-          })
-
-          if (typeof headers === 'object') {
-            Object.assign(options.headers, headers, headers)
-          }
-        }
+        Object.assign(options.headers, headers, requestOptions.headers)
       } else {
         options.headers = headers
       }
@@ -369,17 +356,6 @@ export function getResolver<TSource, TContext, TArgs>({
       // Headers:
       if (typeof data.options.headers === 'object') {
         Object.assign(options.headers, data.options.headers)
-      } else if (typeof data.options.headers === 'function') {
-        const headers = data.options.headers(method, path, title, {
-          source,
-          args,
-          context,
-          info
-        })
-
-        if (typeof headers === 'object') {
-          Object.assign(options.headers, headers)
-        }
       }
 
       // Query string:
@@ -406,9 +382,11 @@ export function getResolver<TSource, TContext, TArgs>({
 
       // Add authentication cookie if created
       if (authCookie !== null) {
-        const j = NodeRequest.jar()
-        j.setCookie(authCookie, options.url)
-        options.jar = j
+        if (options.headers['cookie']) {
+          options.headers['cookie'] += authCookie
+        } else {
+          options.headers['cookie'] = authCookie
+        }
       }
     }
 
@@ -433,128 +411,102 @@ export function getResolver<TSource, TContext, TArgs>({
         `request body: ${options.body}`
     )
 
-    return new Promise((resolve, reject) => {
-      NodeRequest(options, (err, response, body) => {
-        if (err) {
-          httpLog(err)
-          reject(err)
-        } else if (response.statusCode < 200 || response.statusCode > 299) {
-          httpLog(`${response.statusCode} - ${Oas3Tools.trim(body, 100)}`)
+    return httpRequest(options).then((response) => {
+      const body = response.body
+      if (response.statusCode < 200 || response.statusCode > 299) {
+        httpLog(`${response.statusCode} - ${Oas3Tools.trim(body, 100)}`)
 
-          const errorString = `Could not invoke operation ${operation.operationString}`
+        const errorString = `Could not invoke operation ${operation.operationString}`
 
-          if (data.options.provideErrorExtensions) {
-            let responseBody
-            try {
-              responseBody = JSON.parse(body)
-            } catch (e) {
-              responseBody = body
-            }
-
-            const extensions = {
-              method: operation.method,
-              path: operation.path,
-
-              statusCode: response.statusCode,
-              responseHeaders: response.headers,
-              responseBody
-            }
-            reject(graphQLErrorWithExtensions(errorString, extensions))
-          } else {
-            reject(new Error(errorString))
+        if (data.options.provideErrorExtensions) {
+          let responseBody
+          try {
+            responseBody = JSON.parse(body)
+          } catch (e) {
+            responseBody = body
           }
 
-          // Successful response code 200-299
+          const extensions = {
+            method: operation.method,
+            path: operation.path,
+
+            statusCode: response.statusCode,
+            responseHeaders: response.headers,
+            responseBody
+          }
+          throw graphQLErrorWithExtensions(errorString, extensions)
         } else {
-          httpLog(`${response.statusCode} - ${Oas3Tools.trim(body, 100)}`)
+          throw new Error(errorString)
+        }
 
-          if (response.headers['content-type']) {
-            /**
-             * Throw warning if the non-application/json content does not
-             * match the OAS.
-             *
-             * Use an inclusion test in case of charset
-             *
-             * i.e. text/plain; charset=utf-8
-             */
-            if (
-              !(
-                response.headers['content-type'].includes(
-                  operation.responseContentType
-                ) ||
-                operation.responseContentType.includes(
-                  response.headers['content-type']
-                )
+        // Successful response code 200-299
+      } else {
+        httpLog(`${response.statusCode} - ${Oas3Tools.trim(body, 100)}`)
+
+        if (response.headers['content-type']) {
+          /**l
+           * Throw warning if the non-application/json content does not
+           * match the OAS.
+           *
+           * Use an inclusion test in case of charset
+           *
+           * i.e. text/plain; charset=utf-8
+           */
+          if (
+            !(
+              response.headers['content-type'].includes(
+                operation.responseContentType
+              ) ||
+              operation.responseContentType.includes(
+                response.headers['content-type']
               )
-            ) {
-              const errorString =
-                `Operation ` +
-                `${operation.operationString} ` +
-                `should have a content-type '${operation.responseContentType}' ` +
-                `but has '${response.headers['content-type']}' instead`
+            )
+          ) {
+            const errorString =
+              `Operation ` +
+              `${operation.operationString} ` +
+              `should have a content-type '${operation.responseContentType}' ` +
+              `but has '${response.headers['content-type']}' instead`
 
-              httpLog(errorString)
-              reject(errorString)
-            } else {
-              /**
-               * If the response body is type JSON, then parse it
-               *
-               * content-type may not be necessarily 'application/json' it can be
-               * 'application/json; charset=utf-8' for example
-               */
-              if (
-                response.headers['content-type'].includes('application/json')
-              ) {
-                let responseBody
-                try {
-                  responseBody = JSON.parse(body)
-                } catch (e) {
-                  const errorString =
-                    `Cannot JSON parse response body of ` +
-                    `operation ${operation.operationString} ` +
-                    `even though it has content-type 'application/json'`
+            httpLog(errorString)
+            throw new Error(errorString)
+          } else {
+            /**
+             * If the response body is type JSON, then parse it
+             *
+             * content-type may not be necessarily 'application/json' it can be
+             * 'application/json; charset=utf-8' for example
+             */
+            if (response.headers['content-type'].includes('application/json')) {
+              let responseBody
+              try {
+                responseBody = JSON.parse(body)
+              } catch (e) {
+                const errorString =
+                  `Cannot JSON parse response body of ` +
+                  `operation ${operation.operationString} ` +
+                  `even though it has content-type 'application/json'`
 
-                  httpLog(errorString)
-                  reject(errorString)
-                }
+                httpLog(errorString)
+                throw new Error(errorString)
+              }
 
-                resolveData.responseHeaders = response.headers
+              resolveData.responseHeaders = response.headers
 
-                // Deal with the fact that the server might send unsanitized data
-                let saneData = Oas3Tools.sanitizeObjectKeys(
-                  responseBody,
-                  !data.options.simpleNames
-                    ? Oas3Tools.CaseStyle.camelCase
-                    : Oas3Tools.CaseStyle.simple
-                )
+              // Deal with the fact that the server might send unsanitized data
+              let saneData = Oas3Tools.sanitizeObjectKeys(
+                responseBody,
+                !data.options.simpleNames
+                  ? Oas3Tools.CaseStyle.camelCase
+                  : Oas3Tools.CaseStyle.simple
+              )
 
-                // Pass on _openAPIToGraphQL to subsequent resolvers
-                if (saneData && typeof saneData === 'object') {
-                  if (Array.isArray(saneData)) {
-                    saneData.forEach((element) => {
-                      if (typeof element[OPENAPI_TO_GRAPHQL] === 'undefined') {
-                        element[OPENAPI_TO_GRAPHQL] = {
-                          data: {}
-                        }
-                      }
-
-                      if (
-                        source &&
-                        typeof source === 'object' &&
-                        typeof source[OPENAPI_TO_GRAPHQL] === 'object'
-                      ) {
-                        Object.assign(
-                          element[OPENAPI_TO_GRAPHQL],
-                          source[OPENAPI_TO_GRAPHQL]
-                        )
-                      }
-
-                      element[OPENAPI_TO_GRAPHQL].data[getIdentifier(info)] =
-                        resolveData
-                    })
-                  } else {
-                    if (typeof saneData[OPENAPI_TO_GRAPHQL] === 'undefined') {
-                      saneData[OPENAPI_TO_GRAPHQL] = {
+              // Pass on _openAPIToGraphQL to subsequent resolvers
+              if (saneData && typeof saneData === 'object') {
+                if (Array.isArray(saneData)) {
+                  saneData.forEach((element) => {
+                    if (typeof element[OPENAPI_TO_GRAPHQL] === 'undefined') {
+                      element[OPENAPI_TO_GRAPHQL] = {
                         data: {}
                       }
                     }
@@ -565,84 +517,100 @@ export function getResolver<TSource, TContext, TArgs>({
                       typeof source[OPENAPI_TO_GRAPHQL] === 'object'
                     ) {
                       Object.assign(
-                        saneData[OPENAPI_TO_GRAPHQL],
+                        element[OPENAPI_TO_GRAPHQL],
                         source[OPENAPI_TO_GRAPHQL]
                       )
                     }
 
-                    saneData[OPENAPI_TO_GRAPHQL].data[getIdentifier(info)] =
+                    element[OPENAPI_TO_GRAPHQL].data[getIdentifier(info)] =
                       resolveData
-                  }
-                }
-
-                // Apply limit argument
-                if (
-                  data.options.addLimitArgument &&
-                  /**
-                   * NOTE: Does not differentiate between autogenerated args and
-                   * preexisting args
-                   *
-                   * Ensure that there is not preexisting 'limit' argument
-                   */
-                  !operation.parameters.find((parameter) => {
-                    return parameter.name === 'limit'
-                  }) &&
-                  // Only array data
-                  Array.isArray(saneData) &&
-                  // Only array of objects/arrays
-                  saneData.some((data) => {
-                    return typeof data === 'object'
                   })
-                ) {
-                  let arraySaneData = saneData
-
-                  if ('limit' in args) {
-                    const limit = args['limit']
-
-                    if (limit >= 0) {
-                      arraySaneData = arraySaneData.slice(0, limit)
-                    } else {
-                      reject(
-                        new Error(
-                          `Auto-generated 'limit' argument must be greater than or equal to 0`
-                        )
-                      )
+                } else {
+                  if (typeof saneData[OPENAPI_TO_GRAPHQL] === 'undefined') {
+                    saneData[OPENAPI_TO_GRAPHQL] = {
+                      data: {}
                     }
-                  } else {
-                    reject(
-                      new Error(
-                        `Cannot get value for auto-generated 'limit' argument`
-                      )
+                  }
+
+                  if (
+                    source &&
+                    typeof source === 'object' &&
+                    typeof source[OPENAPI_TO_GRAPHQL] === 'object'
+                  ) {
+                    Object.assign(
+                      saneData[OPENAPI_TO_GRAPHQL],
+                      source[OPENAPI_TO_GRAPHQL]
                     )
                   }
 
-                  saneData = arraySaneData
+                  saneData[OPENAPI_TO_GRAPHQL].data[getIdentifier(info)] =
+                    resolveData
+                }
+              }
+
+              // Apply limit argument
+              if (
+                data.options.addLimitArgument &&
+                /**
+                 * NOTE: Does not differentiate between autogenerated args and
+                 * preexisting args
+                 *
+                 * Ensure that there is not preexisting 'limit' argument
+                 */
+                !operation.parameters.find((parameter) => {
+                  return parameter.name === 'limit'
+                }) &&
+                // Only array data
+                Array.isArray(saneData) &&
+                // Only array of objects/arrays
+                saneData.some((data) => {
+                  return typeof data === 'object'
+                })
+              ) {
+                let arraySaneData = saneData
+
+                if ('limit' in args) {
+                  const limit = args['limit']
+
+                  if (limit >= 0) {
+                    arraySaneData = arraySaneData.slice(0, limit)
+                  } else {
+                    throw new Error(
+                      `Auto-generated 'limit' argument must be greater than or equal to 0`
+                    )
+                  }
+                } else {
+                  throw new Error(
+                    `Cannot get value for auto-generated 'limit' argument`
+                  )
                 }
 
-                resolve(saneData)
-              } else {
-                // TODO: Handle YAML
-
-                resolve(body)
+                saneData = arraySaneData
               }
-            }
-          } else {
-            /**
-             * Check to see if there is not supposed to be a response body,
-             * if that is the case, that would explain why there is not
-             * a content-type
-             */
-            if (typeof operation.responseContentType !== 'string') {
-              resolve(null)
-            } else {
-              const errorString = 'Response does not have a Content-Type header'
 
-              httpLog(errorString)
-              reject(errorString)
+              return saneData
+            } else {
+              // TODO: Handle YAML
+
+              return body
             }
           }
+        } else {
+          /**
+           * Check to see if there is not supposed to be a response body,
+           * if that is the case, that would explain why there is not
+           * a content-type
+           */
+          if (typeof operation.responseContentType !== 'string') {
+            return null
+          } else {
+            const errorString = 'Response does not have a Content-Type header'
+
+            httpLog(errorString)
+            throw new Error(errorString)
+          }
         }
-      })
+      }
     })
   }
 }
@@ -759,7 +727,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
             } else if (security.def.in === 'query') {
               authQs[security.def.name] = apiKey
             } else if (security.def.in === 'cookie') {
-              authCookie = NodeRequest.cookie(`${security.def.name}=${apiKey}`)
+              authCookie = `${security.def.name}=${apiKey}`
             }
           } else {
             throw new Error(

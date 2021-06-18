@@ -41,11 +41,6 @@ export type PreprocessingData<TSource, TContext, TArgs> = {
   operations: { [key: string]: Operation }
 
   /**
-   * List of Operation objects
-   */
-  callbackOperations: { [key: string]: Operation }
-
-  /**
    * List of all the used object names to avoid collision
    */
   usedTypeNames: string[]

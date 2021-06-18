@@ -10,6 +10,7 @@ import { afterAll, beforeAll, expect, test } from '@jest/globals'
 
 import * as openAPIToGraphQL from '../lib/index'
 import { startServer, stopServer } from './example_api2_server'
+import { httpRequest } from './httprequest'
 
 const oas = require('./fixtures/example_oas2.json')
 const PORT = 3004
@@ -32,7 +33,10 @@ let createdSchema
 beforeAll(() => {
   return Promise.all([
     openAPIToGraphQL
-      .createGraphQLSchema(oas, { operationIdFieldNames: true })
+      .createGraphQLSchema(oas, {
+        operationIdFieldNames: true,
+        httpRequest
+      })
       .then(({ schema, report }) => {
         createdSchema = schema
       }),

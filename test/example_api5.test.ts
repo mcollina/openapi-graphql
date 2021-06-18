@@ -10,6 +10,7 @@ import { afterAll, beforeAll, expect, test } from '@jest/globals'
 
 import * as openAPIToGraphQL from '../lib/index'
 import { startServer, stopServer } from './example_api5_server'
+import { httpRequest } from './httprequest'
 
 const oas = require('./fixtures/example_oas5.json')
 const PORT = 3007
@@ -27,7 +28,8 @@ beforeAll(() => {
   return Promise.all([
     openAPIToGraphQL
       .createGraphQLSchema(oas, {
-        simpleNames: true
+        simpleNames: true,
+        httpRequest
       })
       .then(({ schema, report }) => {
         createdSchema = schema
@@ -215,7 +217,8 @@ test('Basic simpleEnumValues option test', () => {
 
   const promise2 = openAPIToGraphQL
     .createGraphQLSchema(oas, {
-      simpleEnumValues: true
+      simpleEnumValues: true,
+      httpRequest
     })
     .then(({ schema, report }) => {
       return graphql(schema, query).then((result) => {
@@ -255,7 +258,8 @@ test('Basic simpleEnumValues option test on numerical enum', () => {
 
   const promise2 = openAPIToGraphQL
     .createGraphQLSchema(oas, {
-      simpleEnumValues: true
+      simpleEnumValues: true,
+      httpRequest
     })
     .then(({ schema, report }) => {
       return graphql(schema, query).then((result) => {
@@ -297,7 +301,8 @@ test('Basic simpleEnumValues option test on object enum', () => {
 
   const promise2 = openAPIToGraphQL
     .createGraphQLSchema(oas, {
-      simpleEnumValues: true
+      simpleEnumValues: true,
+      httpRequest
     })
     .then(({ schema, report }) => {
       return graphql(schema, query).then((result) => {
