@@ -383,4 +383,5 @@ This command will temporarily start and later shut down an example REST(-like) A
 MIT license
 
 Copyright (c) Matteo Collina 2021. All Rights Reserved.
+
 Copyright (c) IBM Corp. 2012,2019. All Rights Reserved.
