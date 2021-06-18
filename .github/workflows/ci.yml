@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm ci --ignore-scripts
+          npm i --ignore-scripts
 
       - name: Run Tests
         run: |
