@@ -7,7 +7,7 @@ setGlobalDispatcher(
   })
 )
 
-async function httpRequest(opts) {
+async function httpRequest(opts, context) {
   try {
     let url = opts.url
     const qs = querystring.stringify(opts.qs)

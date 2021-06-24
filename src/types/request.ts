@@ -13,6 +13,6 @@ export type Response = {
   body: any // Buffer, string, stream.Readable, or a plain object if `json` was truthy
 }
 
-export interface HTTPRequest {
-  (options: RequestOptions): Promise<Response>
+export interface HTTPRequest<TContext = { [key: string]: any }> {
+  <TContext>(options: RequestOptions, context: TContext): Promise<Response>
 }

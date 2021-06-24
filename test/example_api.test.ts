@@ -988,6 +988,43 @@ test('Define header and query options', () => {
     })
 })
 
+test('httpRequest accepts the context', () => {
+  interface MyContext {
+    foo: string
+  }
+  const options: Options<any, any, any> = {
+    headers: {
+      exampleHeader: 'some-value'
+    },
+    qs: {
+      limit: '30'
+    },
+    httpRequest<MyContext>(opts, context) {
+      expect(context.foo).toEqual('bar')
+      return httpRequest(opts, context)
+    }
+  }
+
+  const query = `{
+    status2 (globalquery: "test")
+  }`
+  return openAPIToGraphQL
+    .createGraphQLSchema(oas, options)
+    .then(({ schema }) => {
+      // validate that 'limit' parameter is covered by options:
+      const ast = parse(query)
+      const errors = validate(schema, ast)
+      expect(errors).toEqual([])
+      return graphql(schema, query, null, { foo: 'bar' }).then((result) => {
+        expect(result).toEqual({
+          data: {
+            status2: 'Ok'
+          }
+        })
+      })
+    })
+})
+
 test('Resolve simple allOf', () => {
   const query = `{
     user (username: "arlene") {

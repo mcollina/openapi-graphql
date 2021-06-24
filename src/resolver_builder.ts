@@ -411,7 +411,7 @@ export function getResolver<TSource, TContext, TArgs>({
         `request body: ${options.body}`
     )
 
-    return httpRequest(options).then((response) => {
+    return httpRequest(options, context).then((response) => {
       const body = response.body
       if (response.statusCode < 200 || response.statusCode > 299) {
         httpLog(`${response.statusCode} - ${Oas3Tools.trim(body, 100)}`)
