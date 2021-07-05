@@ -63,7 +63,7 @@
     "form-urlencoded": "^6.0.4",
     "graphql-type-json": "^0.3.2",
     "json-ptr": "^2.2.0",
-    "jsonpath-plus": "^5.0.0",
+    "jsonpath-plus": "^6.0.0",
     "oas-validator": "^5.0.2",
     "pluralize": "^8.0.0",
     "swagger2openapi": "^7.0.2"
