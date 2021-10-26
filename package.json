@@ -62,7 +62,7 @@
     "deep-equal": "^2.0.1",
     "form-urlencoded": "^6.0.4",
     "graphql-type-json": "^0.3.2",
-    "json-ptr": "^2.2.0",
+    "json-ptr": "^3.0.0",
     "jsonpath-plus": "^6.0.1",
     "oas-validator": "^5.0.2",
     "pluralize": "^8.0.0",
