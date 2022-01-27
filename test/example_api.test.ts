@@ -56,7 +56,6 @@ test('Get descriptions', () => {
     }
   }`
 
-
   return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
@@ -868,56 +867,60 @@ test('Fields with arbitrary JSON (e.g., maps) can be returned', () => {
     }
   }`
 
-  const promise = graphql({ schema: createdSchema, source: query }).then((result) => {
-    expect(result).toEqual({
-      data: {
-        cars: [
-          {
-            tags: null
-          },
-          {
-            tags: {
-              speed: 'extreme'
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(result).toEqual({
+        data: {
+          cars: [
+            {
+              tags: null
+            },
+            {
+              tags: {
+                speed: 'extreme'
+              }
+            },
+            {
+              tags: {
+                impression: 'decadent',
+                condition: 'slightly beat-up'
+              }
+            },
+            {
+              tags: {
+                impression: 'decadent'
+              }
             }
-          },
-          {
-            tags: {
-              impression: 'decadent',
-              condition: 'slightly beat-up'
-            }
-          },
-          {
-            tags: {
-              impression: 'decadent'
-            }
-          }
-        ]
-      }
-    })
-  })
+          ]
+        }
+      })
+    }
+  )
 
-  const promise2 = graphql({ schema: createdSchema, source: query }).then((result) => {
-    expect(result).toEqual({
-      data: {
-        cars: [
-          {
-            features: {
-              color: 'banana yellow to be specific'
+  const promise2 = graphql({ schema: createdSchema, source: query2 }).then(
+    (result) => {
+      expect(result).toEqual({
+        data: {
+          cars: [
+            {
+              features: {
+                color: 'banana yellow to be specific'
+              }
+            },
+            {
+              features: null
+            },
+            {
+              features: null
+            },
+            {
+              features: null
             }
-          },
-          {
-            features: null
-          },
-          {
-            features: null
-          },
-          {
-            features: null
-          }
-        ]
-      }
-    })
-  })
+          ]
+        }
+      })
+    }
+  )
 
   return Promise.all([promise, promise2])
 })
@@ -1016,7 +1019,11 @@ test('httpRequest accepts the context', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql({ schema, source: query, contextValue: { foo: 'bar' } }).then((result) => {
+      return graphql({
+        schema,
+        source: query,
+        contextValue: { foo: 'bar' }
+      }).then((result) => {
         expect(result).toEqual({
           data: {
             status2: 'Ok'
@@ -1297,7 +1304,7 @@ test('Option provideErrorExtensions should prevent error extensions from being c
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
       return graphql({ schema, source: query }).then((result) => {
-        expect(result).toEqual({
+        expect(JSON.parse(JSON.stringify(result))).toEqual({
           errors: [
             {
               message: 'Could not invoke operation GET /users/{username}',
@@ -1816,19 +1823,21 @@ test('Generate "Equivalent to..." messages', () => {
     }
   }`
 
-  const promise2 = graphql({ schema: createdSchema, source: query }).then((result) => {
-    expect(
-      result.data['__type']['fields'].find((field) => {
-        return field.type.name === 'Company'
+  const promise2 = graphql({ schema: createdSchema, source: query2 }).then(
+    (result) => {
+      expect(
+        result.data['__type']['fields'].find((field) => {
+          return field.type.name === 'Company'
+        })
+      ).toEqual({
+        type: {
+          name: 'Company'
+        },
+        description:
+          "Allows to fetch the user's employer company.\n\nEquivalent to GET /companies/{id}"
       })
-    ).toEqual({
-      type: {
-        name: 'Company'
-      },
-      description:
-        "Allows to fetch the user's employer company.\n\nEquivalent to GET /companies/{id}"
-    })
-  })
+    }
+  )
 
   return Promise.all([promise, promise2])
 })
@@ -1901,7 +1910,7 @@ test('Withhold "Equivalent to..." messages', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql({ schema, source: query }).then((result) => {
+      return graphql({ schema, source: query2 }).then((result) => {
         expect(
           result.data['__type']['fields'].find((field) => {
             return field.type.name === 'Company'
@@ -2023,23 +2032,25 @@ test('Option selectQueryOrMutationField', () => {
   }`
 
   // The users field should exist as a Query field
-  const promise = graphql({ schema: createdSchema, source: query }).then((result) => {
-    expect(
-      result.data['__schema']['queryType'].fields.find((field) => {
-        return field.name === 'user'
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(
+        result.data['__schema']['queryType'].fields.find((field) => {
+          return field.name === 'user'
+        })
+      ).toEqual({
+        name: 'user',
+        description:
+          'Returns a user from the system.\n\nEquivalent to GET /users/{username}'
       })
-    ).toEqual({
-      name: 'user',
-      description:
-        'Returns a user from the system.\n\nEquivalent to GET /users/{username}'
-    })
 
-    expect(
-      result.data['__schema']['mutationType'].fields.find((field) => {
-        return field.name === 'user'
-      })
-    ).toEqual(undefined)
-  })
+      expect(
+        result.data['__schema']['mutationType'].fields.find((field) => {
+          return field.name === 'user'
+        })
+      ).toEqual(undefined)
+    }
+  )
 
   const options: Options<any, any, any> = {
     selectQueryOrMutationField: {
@@ -2215,26 +2226,28 @@ test.skip('Query string arguments are not created when they are provided through
     }
   }`
 
-  const promise = graphql({ schema: createdSchema, source: query }).then((result) => {
-    expect(result).toEqual({
-      data: {
-        users: [
-          {
-            name: 'Arlene L McMahon'
-          },
-          {
-            name: 'William B Ropp'
-          },
-          {
-            name: 'John C Barnes'
-          },
-          {
-            name: 'Heather J Tate'
-          }
-        ]
-      }
-    })
-  })
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(result).toEqual({
+        data: {
+          users: [
+            {
+              name: 'Arlene L McMahon'
+            },
+            {
+              name: 'William B Ropp'
+            },
+            {
+              name: 'John C Barnes'
+            },
+            {
+              name: 'Heather J Tate'
+            }
+          ]
+        }
+      })
+    }
+  )
 
   // The GET status operation has a limit query string parameter
   const options: Options<any, any, any> = {
@@ -2306,20 +2319,22 @@ test('Option genericPayloadArgName', () => {
   }`
 
   // The postUser field should have a userInput argument
-  const promise = graphql({ schema: createdSchema, source: query }).then((result) => {
-    expect(
-      result.data['__schema']['mutationType'].fields.find((field) => {
-        return field.name === 'postUser'
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(
+        result.data['__schema']['mutationType'].fields.find((field) => {
+          return field.name === 'postUser'
+        })
+      ).toEqual({
+        name: 'postUser',
+        args: [
+          {
+            name: 'userInput'
+          }
+        ]
       })
-    ).toEqual({
-      name: 'postUser',
-      args: [
-        {
-          name: 'userInput'
-        }
-      ]
-    })
-  })
+    }
+  )
 
   const options: Options<any, any, any> = {
     genericPayloadArgName: true
