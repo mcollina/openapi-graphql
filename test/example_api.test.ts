@@ -56,7 +56,7 @@ test('Get descriptions', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         __type: {
@@ -96,7 +96,7 @@ test('Get resource (incl. enum)', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: { user: { name: 'Arlene L McMahon', status: 'STAFF' } }
     })
@@ -110,7 +110,7 @@ test('Get resource 2', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({ data: { company: { legalForm: 'public' } } })
   })
 })
@@ -124,7 +124,7 @@ test('Get resource with status code: 2XX', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         papers: [
@@ -149,7 +149,7 @@ test('Get resource with no response schema and status code: 204 and fillEmptyRes
     bonuses
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         bonuses: null
@@ -169,7 +169,7 @@ test('Get nested resource via link $response.body#/...', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -193,7 +193,7 @@ test('Get nested resource via link $request.path#/... and $request.query#/', () 
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         productWithId: {
@@ -216,7 +216,7 @@ test('Get nested resource via link operationRef', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         productWithId: {
@@ -247,7 +247,7 @@ test('Get nested lists of resources', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -421,7 +421,7 @@ test('Link parameters as constants and variables', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         scanner: {
@@ -478,7 +478,7 @@ test('Nested links with constants and variables', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         scanner: {
@@ -526,7 +526,7 @@ test('Link parameters as constants and variables with request payload', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         postScanner: {
@@ -547,7 +547,7 @@ test('Get response without providing parameter with default value', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         productReviews: [{ text: 'Great product' }, { text: 'I love it' }]
@@ -561,7 +561,7 @@ test('Get response with header parameters', () => {
     snack(snackType: CHIPS, snackSize: SMALL)
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         snack: 'Here is a small chips'
@@ -582,7 +582,7 @@ test('Get JSON response even with non-JSON accept header', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         office: {
@@ -599,7 +599,7 @@ test('Get response with cookies', () => {
     cookie (cookieType: CHOCOLATE_CHIP, cookieSize: MEGA_SIZED)
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         cookie: `You ordered a mega-sized chocolate chip cookie!`
@@ -618,7 +618,7 @@ test('Ensure good naming for operations with duplicated schemas', () => {
     dirtyDesks
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         cleanDesks: '5 clean desks',
@@ -639,7 +639,7 @@ test('Get response containing 64-bit integer (using GraphQLFloat)', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         productReviews: [
@@ -658,7 +658,7 @@ test('Get array of strings', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -678,7 +678,7 @@ test('Get array of objects', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         company: {
@@ -709,7 +709,7 @@ test('Get single resource', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -741,7 +741,7 @@ test('Post resource', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         postUser: {
@@ -772,7 +772,7 @@ test('Post resource and get nested resource back', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         postUser: {
@@ -792,7 +792,7 @@ test('Post resource with non-application/json content-type request and response 
   const query = `mutation {
     postPaper(textPlainInput: "happy")
   }`
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         postPaper: 'You sent the paper idea: happy'
@@ -813,7 +813,7 @@ test(
       }
     }`
 
-    return graphql(createdSchema, query).then((result) => {
+    return graphql({ schema: createdSchema, source: query }).then((result) => {
       expect(result).toEqual({
         data: {
           productWithId: {
@@ -839,7 +839,7 @@ test('Request data is correctly de-sanitized to be sent', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         postProductWithId: {
@@ -867,56 +867,60 @@ test('Fields with arbitrary JSON (e.g., maps) can be returned', () => {
     }
   }`
 
-  const promise = graphql(createdSchema, query, null, {}).then((result) => {
-    expect(result).toEqual({
-      data: {
-        cars: [
-          {
-            tags: null
-          },
-          {
-            tags: {
-              speed: 'extreme'
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(result).toEqual({
+        data: {
+          cars: [
+            {
+              tags: null
+            },
+            {
+              tags: {
+                speed: 'extreme'
+              }
+            },
+            {
+              tags: {
+                impression: 'decadent',
+                condition: 'slightly beat-up'
+              }
+            },
+            {
+              tags: {
+                impression: 'decadent'
+              }
             }
-          },
-          {
-            tags: {
-              impression: 'decadent',
-              condition: 'slightly beat-up'
-            }
-          },
-          {
-            tags: {
-              impression: 'decadent'
-            }
-          }
-        ]
-      }
-    })
-  })
+          ]
+        }
+      })
+    }
+  )
 
-  const promise2 = graphql(createdSchema, query2, null, {}).then((result) => {
-    expect(result).toEqual({
-      data: {
-        cars: [
-          {
-            features: {
-              color: 'banana yellow to be specific'
+  const promise2 = graphql({ schema: createdSchema, source: query2 }).then(
+    (result) => {
+      expect(result).toEqual({
+        data: {
+          cars: [
+            {
+              features: {
+                color: 'banana yellow to be specific'
+              }
+            },
+            {
+              features: null
+            },
+            {
+              features: null
+            },
+            {
+              features: null
             }
-          },
-          {
-            features: null
-          },
-          {
-            features: null
-          },
-          {
-            features: null
-          }
-        ]
-      }
-    })
-  })
+          ]
+        }
+      })
+    }
+  )
 
   return Promise.all([promise, promise2])
 })
@@ -928,7 +932,7 @@ test('Capitalized enum values can be returned', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         car: {
@@ -946,7 +950,7 @@ test('Enum values that started as numbers in OAS can be returned as strings', ()
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         car: {
@@ -978,7 +982,7 @@ test('Define header and query options', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             status2: 'Ok'
@@ -1015,7 +1019,11 @@ test('httpRequest accepts the context', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query, null, { foo: 'bar' }).then((result) => {
+      return graphql({
+        schema,
+        source: query,
+        contextValue: { foo: 'bar' }
+      }).then((result) => {
         expect(result).toEqual({
           data: {
             status2: 'Ok'
@@ -1036,7 +1044,7 @@ test('Resolve simple allOf', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -1064,7 +1072,7 @@ test('Resolve ref in allOf', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -1093,7 +1101,7 @@ test('Resolve nested allOf', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         user: {
@@ -1122,7 +1130,7 @@ test('Resolve circular allOf', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(
       result.data['__type']['fields'].find((field) => {
         return field.name === 'familyCircular'
@@ -1147,7 +1155,7 @@ test('Resolve oneOf, which becomes a union type', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     type carType = {
       name: string
       description: string
@@ -1198,7 +1206,7 @@ test('Union type', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         asset: [
@@ -1260,7 +1268,7 @@ test('Error contains extension', () => {
     }
   }`
 
-  return graphql(createdSchema, query, null, {}).then((error) => {
+  return graphql({ schema: createdSchema, source: query }).then((error) => {
     const extensions = error.errors[0].extensions
     expect(extensions).toBeDefined()
 
@@ -1295,8 +1303,8 @@ test('Option provideErrorExtensions should prevent error extensions from being c
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
-        expect(result).toEqual({
+      return graphql({ schema, source: query }).then((result) => {
+        expect(JSON.parse(JSON.stringify(result))).toEqual({
           errors: [
             {
               message: 'Could not invoke operation GET /users/{username}',
@@ -1344,7 +1352,7 @@ test('Option customResolver', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             user: {
@@ -1393,7 +1401,7 @@ test('Option customResolver with links', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             user: {
@@ -1440,7 +1448,7 @@ test('Option customResolver using resolver arguments', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             user: {
@@ -1480,7 +1488,7 @@ test('Option customResolver using resolver arguments that are sanitized', () => 
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             productWithId: {
@@ -1519,7 +1527,7 @@ test('Option addLimitArgument', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             user: {
@@ -1604,7 +1612,7 @@ test('Content property in parameter object', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         coordinates: {
@@ -1627,7 +1635,7 @@ test('Handle objects without defined properties with arbitrary GraphQL JSON type
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         trashcan: {
@@ -1693,7 +1701,7 @@ test('Handle input objects without defined properties with arbitrary GraphQL JSO
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         postOfficeTrashCan: {
@@ -1728,7 +1736,7 @@ test('Operation returning arbitrary JSON type should not include _openAPIToGraph
    * There should only be the random and status fields but no _openAPIToGraphQL
    * field.
    */
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(result).toEqual({
       data: {
         random: {
@@ -1773,7 +1781,7 @@ test('Generate "Equivalent to..." messages', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         // Make sure all query fields have the message
         expect(
           result.data['__schema']['queryType']['fields'].every((field) => {
@@ -1815,19 +1823,21 @@ test('Generate "Equivalent to..." messages', () => {
     }
   }`
 
-  const promise2 = graphql(createdSchema, query2).then((result) => {
-    expect(
-      result.data['__type']['fields'].find((field) => {
-        return field.type.name === 'Company'
+  const promise2 = graphql({ schema: createdSchema, source: query2 }).then(
+    (result) => {
+      expect(
+        result.data['__type']['fields'].find((field) => {
+          return field.type.name === 'Company'
+        })
+      ).toEqual({
+        type: {
+          name: 'Company'
+        },
+        description:
+          "Allows to fetch the user's employer company.\n\nEquivalent to GET /companies/{id}"
       })
-    ).toEqual({
-      type: {
-        name: 'Company'
-      },
-      description:
-        "Allows to fetch the user's employer company.\n\nEquivalent to GET /companies/{id}"
-    })
-  })
+    }
+  )
 
   return Promise.all([promise, promise2])
 })
@@ -1867,7 +1877,7 @@ test('Withhold "Equivalent to..." messages', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
           result.data['__schema']['queryType']['fields'].every((field) => {
             return field.description.includes('\n\nEquivalent to GET ')
@@ -1900,7 +1910,7 @@ test('Withhold "Equivalent to..." messages', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query2).then((result) => {
+      return graphql({ schema, source: query2 }).then((result) => {
         expect(
           result.data['__type']['fields'].find((field) => {
             return field.type.name === 'Company'
@@ -1930,9 +1940,9 @@ test('UUID format becomes GraphQL ID type', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({ schema: createdSchema, source: query }).then((result) => {
     expect(
-      result.data['__type'].fields.find((field) => {
+      result.data['__type']['fields'].find((field) => {
         return field.name === 'id'
       })
     ).toEqual({
@@ -1972,9 +1982,9 @@ test('Option idFormats', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
-          result.data['__type'].fields.find((field) => {
+          result.data['__type']['fields'].find((field) => {
             return field.name === 'patentId'
           })
         ).toEqual({
@@ -2022,23 +2032,25 @@ test('Option selectQueryOrMutationField', () => {
   }`
 
   // The users field should exist as a Query field
-  const promise = graphql(createdSchema, query).then((result) => {
-    expect(
-      result.data['__schema'].queryType.fields.find((field) => {
-        return field.name === 'user'
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(
+        result.data['__schema']['queryType'].fields.find((field) => {
+          return field.name === 'user'
+        })
+      ).toEqual({
+        name: 'user',
+        description:
+          'Returns a user from the system.\n\nEquivalent to GET /users/{username}'
       })
-    ).toEqual({
-      name: 'user',
-      description:
-        'Returns a user from the system.\n\nEquivalent to GET /users/{username}'
-    })
 
-    expect(
-      result.data['__schema'].mutationType.fields.find((field) => {
-        return field.name === 'user'
-      })
-    ).toEqual(undefined)
-  })
+      expect(
+        result.data['__schema']['mutationType'].fields.find((field) => {
+          return field.name === 'user'
+        })
+      ).toEqual(undefined)
+    }
+  )
 
   const options: Options<any, any, any> = {
     selectQueryOrMutationField: {
@@ -2057,15 +2069,15 @@ test('Option selectQueryOrMutationField', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
-          result.data['__schema'].queryType.fields.find((field) => {
+          result.data['__schema']['queryType'].fields.find((field) => {
             return field.name === 'getUserByUsername'
           })
         ).toEqual(undefined)
 
         expect(
-          result.data['__schema'].mutationType.fields.find((field) => {
+          result.data['__schema']['mutationType'].fields.find((field) => {
             return field.name === 'getUserByUsername'
           })
         ).toEqual({
@@ -2108,9 +2120,9 @@ test('Header arguments are not created when they are provided through headers op
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
-          result.data['__schema'].queryType.fields.find((field) => {
+          result.data['__schema']['queryType'].fields.find((field) => {
             return field.name === 'snack'
           })
         ).toEqual({
@@ -2153,9 +2165,9 @@ test.skip('Header arguments are not created when they are provided through reque
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
-          result.data['__schema'].queryType.fields.find((field) => {
+          result.data['__schema']['queryType'].fields.find((field) => {
             return field.name === 'snack'
           })
         ).toEqual({
@@ -2194,9 +2206,9 @@ test.skip('Query string arguments are not created when they are provided through
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
-          result.data['__schema'].queryType.fields.find((field) => {
+          result.data['__schema']['queryType'].fields.find((field) => {
             return field.name === 'users'
           })
         ).toEqual({
@@ -2214,26 +2226,28 @@ test.skip('Query string arguments are not created when they are provided through
     }
   }`
 
-  const promise = graphql(createdSchema, query, null, {}).then((result) => {
-    expect(result).toEqual({
-      data: {
-        users: [
-          {
-            name: 'Arlene L McMahon'
-          },
-          {
-            name: 'William B Ropp'
-          },
-          {
-            name: 'John C Barnes'
-          },
-          {
-            name: 'Heather J Tate'
-          }
-        ]
-      }
-    })
-  })
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(result).toEqual({
+        data: {
+          users: [
+            {
+              name: 'Arlene L McMahon'
+            },
+            {
+              name: 'William B Ropp'
+            },
+            {
+              name: 'John C Barnes'
+            },
+            {
+              name: 'Heather J Tate'
+            }
+          ]
+        }
+      })
+    }
+  )
 
   // The GET status operation has a limit query string parameter
   const options: Options<any, any, any> = {
@@ -2257,7 +2271,7 @@ test.skip('Query string arguments are not created when they are provided through
       const ast = parse(query2)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query2).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(result).toEqual({
           data: {
             users: [
@@ -2305,20 +2319,22 @@ test('Option genericPayloadArgName', () => {
   }`
 
   // The postUser field should have a userInput argument
-  const promise = graphql(createdSchema, query).then((result) => {
-    expect(
-      result.data['__schema'].mutationType.fields.find((field) => {
-        return field.name === 'postUser'
+  const promise = graphql({ schema: createdSchema, source: query }).then(
+    (result) => {
+      expect(
+        result.data['__schema']['mutationType'].fields.find((field) => {
+          return field.name === 'postUser'
+        })
+      ).toEqual({
+        name: 'postUser',
+        args: [
+          {
+            name: 'userInput'
+          }
+        ]
       })
-    ).toEqual({
-      name: 'postUser',
-      args: [
-        {
-          name: 'userInput'
-        }
-      ]
-    })
-  })
+    }
+  )
 
   const options: Options<any, any, any> = {
     genericPayloadArgName: true
@@ -2331,9 +2347,9 @@ test('Option genericPayloadArgName', () => {
       const ast = parse(query)
       const errors = validate(schema, ast)
       expect(errors).toEqual([])
-      return graphql(schema, query).then((result) => {
+      return graphql({ schema, source: query }).then((result) => {
         expect(
-          result.data['__schema'].mutationType.fields.find((field) => {
+          result.data['__schema']['mutationType'].fields.find((field) => {
             return field.name === 'postUser'
           })
         ).toEqual({
@@ -2371,9 +2387,9 @@ test('Non-nullable properties from nested allOf', () => {
     const ast = parse(query)
     const errors = validate(schema, ast)
     expect(errors).toEqual([])
-    return graphql(schema, query).then((result) => {
+    return graphql({ schema, source: query }).then((result) => {
       expect(
-        result.data['__type'].fields.find((field) => {
+        result.data['__type']['fields'].find((field) => {
           return field.name === 'family'
         })
       ).toEqual({

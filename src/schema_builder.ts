@@ -385,7 +385,7 @@ function createOrReuseUnion<TSource, TContext, TArgs>({
       name: def.graphQLTypeName,
       description,
       types,
-      resolveType: (source, context, info) => {
+      resolveType: (source, info) => {
         const properties = Object.keys(source)
           // Remove custom _openAPIToGraphQL property used to pass data
           .filter((property) => property !== '_openAPIToGraphQL')
@@ -401,7 +401,7 @@ function createOrReuseUnion<TSource, TContext, TArgs>({
          * identified if, for whatever reason, the return data is a superset
          * of the fields specified in the OAS
          */
-        return types.find((type) => {
+        const type = types.find((type) => {
           const typeFields = Object.keys(type.getFields())
 
           // The type should be a superset of the properties
@@ -411,6 +411,10 @@ function createOrReuseUnion<TSource, TContext, TArgs>({
 
           return false
         })
+        if (type) {
+          return type.toString()
+        }
+        return null
       }
     })
 
@@ -681,7 +685,7 @@ function createFields<TSource, TContext, TArgs>({
 
       fields[sanePropName] = {
         type: requiredProperty
-          ? new GraphQLNonNull(objectType)
+          ? new GraphQLNonNull(objectType) as GraphQLOutputType
           : (objectType as GraphQLOutputType),
 
         description:
