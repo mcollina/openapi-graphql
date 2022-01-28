@@ -1,6 +1,6 @@
 {
   "name": "openapi-graphql",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Generates a GraphQL schema for a given OpenAPI Specification (OAS)",
   "contributors": [
     "Matteo Collina",
