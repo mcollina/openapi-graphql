@@ -89,7 +89,7 @@
     "qs": "^6.10.1",
     "rimraf": "^3.0.1",
     "simple-statistics": "^7.3.0",
-    "standard": "^16.0.0",
+    "standard": "^17.0.0",
     "ts-jest": "^27.0.0",
     "tslint": "^6.0.0",
     "tslint-config-standard": "^9.0.0",
