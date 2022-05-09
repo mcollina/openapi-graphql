@@ -79,7 +79,7 @@
     "express": "^4.16.4",
     "glob": "^8.0.1",
     "graphql": "^16.0.0",
-    "husky": "^7.0.0",
+    "husky": "^8.0.1",
     "isomorphic-git": "^1.7.8",
     "jest": "^27.0.0",
     "js-yaml": "^4.1.0",
